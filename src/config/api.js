@@ -1,4 +1,4 @@
 export const GOOGLE_AI_CONFIG = {
-  apiKey: "AIzaSyDyO3RcVB1iXrGt16uIoZ0hDWiSbHbsXp4",
+  apiKey: "AIzaSyBOKIsFoCHiQDeJc2BDzQd8Eu9HK3lVMAE",
   model: "gemini-2.0-flash",
 };
