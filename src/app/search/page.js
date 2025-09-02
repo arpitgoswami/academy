@@ -159,6 +159,7 @@ export default function SearchPage() {
     setIsLoading(true);
     setShowLoadingScreen(true);
     setApiResponse(null);
+    setShowSkeletons(true);
 
     try {
       // Fetch search results and images in parallel
@@ -200,7 +201,6 @@ export default function SearchPage() {
       await new Promise((resolve) => setTimeout(resolve, 4000));
       setShowLoadingScreen(false);
       // Show skeletons immediately after loading screen
-      setShowSkeletons(true);
 
       // Show actual content
       if (searchData) {
