@@ -157,13 +157,13 @@ export default function SearchPage() {
     try {
       // Fetch search results and images in parallel
       const [searchResponse, imagesResponse] = await Promise.all([
-        fetch(`/api/images?query=${encodeURIComponent(query)}`, {
+        fetch(`/api/search?q=${encodeURIComponent(query)}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         }),
-        fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+        fetch(`/api/images?query=${encodeURIComponent(query)}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -180,8 +180,16 @@ export default function SearchPage() {
         imagesResponse.json(),
       ]);
 
-      setSearchResult(searchData);
-      setImages(imagesData.results?.slice(0, 4) || []);
+      // Debug log
+      console.log("Search Response:", searchData);
+      console.log("Images Response:", imagesData);
+
+      if (searchData) {
+        setSearchResult(searchData);
+      }
+      if (imagesData?.results) {
+        setImages(imagesData.results.slice(0, 4));
+      }
     } catch (err) {
       setError("Failed to get response. Please try again.");
     } finally {
@@ -214,7 +222,7 @@ export default function SearchPage() {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden poppins-regular">
       {/* Gradient Background */}
       <div
         className="absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-blue-100"
@@ -472,18 +480,6 @@ export default function SearchPage() {
                         {/* Answer Section */}
                         {searchResult?.answer && (
                           <motion.div className="p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="flex items-center gap-3 mb-6"
-                            >
-                              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                <Sparkles className="w-4 h-4 text-green-600" />
-                              </div>
-                              <h3 className="text-xl font-semibold text-gray-900">
-                                Answer
-                              </h3>
-                            </motion.div>
                             <div className="prose max-w-none">
                               {searchResult.answer
                                 .split("\n")
@@ -493,7 +489,11 @@ export default function SearchPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="mb-4 text-gray-700 leading-relaxed"
+                                    className={`mb-4 leading-relaxed ${
+                                      i === 0
+                                        ? "text-2xl font-bold text-blue-600"
+                                        : "text-gray-700"
+                                    }`}
                                   >
                                     {line}
                                   </motion.p>
