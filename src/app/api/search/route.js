@@ -118,11 +118,20 @@ export async function GET(req) {
     - Be objective, do not speculate.
     - Prioritize extracted data but fill in knowledge gaps with your own reliable data.
     - Avoid repetition. Do not list URLs in the answer.
-    - Final answer must be helpful, professional, and exceed 200 words (but not more than 1000 words).
+    - Final answer must be helpful, professional, and exceed 200 words (but not more than 2000 words).
+    
+
+    ### Response Format:
+    - Don't provide me any markdown language.
+    - Provide just simple text and in the form of points.
+    - At the top there must be a heading followed by the response.
+    - Don't include any URLs in the response.
+    - There must short points of a single or double line and they must start with a related emoji.
+    - No hallucination
     `;
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
