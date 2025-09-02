@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import LoadingScreen from "@/components/Loading";
 import {
   Search,
   Loader,
@@ -141,8 +142,11 @@ export default function SearchPage() {
   const [searchResult, setSearchResult] = useState(null);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  const [showSkeletons, setShowSkeletons] = useState(false);
   const [error, setError] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [apiResponse, setApiResponse] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -153,6 +157,8 @@ export default function SearchPage() {
     setImages([]);
     setError("");
     setIsLoading(true);
+    setShowLoadingScreen(true);
+    setApiResponse(null);
 
     try {
       // Fetch search results and images in parallel
@@ -184,12 +190,27 @@ export default function SearchPage() {
       console.log("Search Response:", searchData);
       console.log("Images Response:", imagesData);
 
+      // Store API response but don't update UI yet
+      setApiResponse({
+        searchData,
+        imagesData,
+      });
+
+      // Wait for loading screen (4s)
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      setShowLoadingScreen(false);
+      // Show skeletons immediately after loading screen
+      setShowSkeletons(true);
+
+      // Show actual content
       if (searchData) {
         setSearchResult(searchData);
       }
       if (imagesData?.results) {
-        setImages(imagesData.results.slice(0, 4));
+        setImages(imagesData.results.slice(0, 8));
       }
+      // Remove skeletons after content is loaded
+      setShowSkeletons(false);
     } catch (err) {
       setError("Failed to get response. Please try again.");
     } finally {
@@ -396,7 +417,13 @@ export default function SearchPage() {
                 </AnimatePresence>
 
                 {/* Loading State */}
-                {isLoading && (
+                {/* Loading Screen */}
+                <AnimatePresence>
+                  {showLoadingScreen && <LoadingScreen />}
+                </AnimatePresence>
+
+                {/* Skeletons */}
+                {showSkeletons && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -441,7 +468,8 @@ export default function SearchPage() {
 
                 {/* Actual Results */}
                 <AnimatePresence>
-                  {!isLoading &&
+                  {!showSkeletons &&
+                    !showLoadingScreen &&
                     (searchResult?.answer || images.length > 0) && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -454,26 +482,47 @@ export default function SearchPage() {
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+                            className="relative w-full mb-6"
                           >
-                            {images.map((image, idx) => (
-                              <motion.div
-                                key={image.id}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
-                              >
-                                <img
-                                  src={image.urls.regular}
-                                  alt={
-                                    image.alt_description ||
-                                    "Search result image"
-                                  }
-                                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-200"
-                                />
-                              </motion.div>
-                            ))}
+                            <div className="overflow-x-scroll pb-4">
+                              <div className="flex space-x-4 min-w-max px-2">
+                                {images.map((image, idx) => (
+                                  <motion.div
+                                    key={image.id}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="relative group"
+                                  >
+                                    <div className="w-64 aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
+                                      <img
+                                        src={image.urls.regular}
+                                        alt={
+                                          image.alt_description ||
+                                          "Search result image"
+                                        }
+                                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-200"
+                                      />
+                                    </div>
+                                    <a
+                                      href={image.source.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2 rounded-b-xl"
+                                    >
+                                      <img
+                                        src={image.source.favicon}
+                                        alt={image.source.name}
+                                        className="w-4 h-4 rounded-sm"
+                                      />
+                                      <span className="text-sm truncate">
+                                        {image.source.name}
+                                      </span>
+                                    </a>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </div>
                           </motion.div>
                         )}
 
@@ -510,47 +559,58 @@ export default function SearchPage() {
                               transition={{ delay: 0.3 }}
                               className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
                             >
-                              <div className="p-6 border-b border-gray-100">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <Globe className="w-4 h-4 text-blue-600" />
-                                  </div>
-                                  <h4 className="text-lg font-semibold text-gray-900">
-                                    Sources
-                                  </h4>
-                                  <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                    {searchResult.sources.length} results
-                                  </span>
+                              {/* Header */}
+                              <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                                  <Globe className="w-5 h-5 text-blue-600" />
                                 </div>
+                                <h4 className="text-xl font-semibold text-gray-900">
+                                  Sources
+                                </h4>
+                                <span className="ml-auto text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                  {searchResult.sources.length} results
+                                </span>
                               </div>
 
-                              <div className="divide-y divide-gray-100">
-                                {searchResult.sources.map((source, i) => (
-                                  <motion.a
-                                    key={i}
-                                    href={source.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 + i * 0.1 }}
-                                    className="group block p-6 hover:bg-gray-50 transition-all duration-200"
-                                  >
-                                    <div className="flex items-start gap-4">
-                                      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                                        <Link2 className="w-5 h-5 text-white" />
+                              {/* Sources List */}
+                              <div className="grid gap-3 p-4">
+                                {searchResult.sources.map((source, i) => {
+                                  const domain =
+                                    source.domain ||
+                                    new URL(source.link).hostname;
+                                  const favicon = `https://www.google.com/s2/favicons?domain=${domain}`;
+
+                                  return (
+                                    <motion.a
+                                      key={i}
+                                      href={source.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: 0.4 + i * 0.1 }}
+                                      className="group flex items-start gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+                                    >
+                                      {/* Favicon as main logo */}
+                                      <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden shadow-sm bg-gray-50 flex items-center justify-center">
+                                        <img
+                                          src={favicon}
+                                          alt={domain}
+                                          className="w-6 h-6 object-contain"
+                                        />
                                       </div>
 
+                                      {/* Source Details */}
                                       <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <h5 className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors duration-200 truncate">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <h5 className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors truncate">
                                             {source.title || "Untitled Source"}
                                           </h5>
-                                          <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 flex-shrink-0 transition-colors duration-200" />
+                                          <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 flex-shrink-0 transition-colors" />
                                         </div>
 
                                         {source.description && (
-                                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                                             {source.description}
                                           </p>
                                         )}
@@ -558,8 +618,7 @@ export default function SearchPage() {
                                         <div className="flex items-center gap-4 text-xs text-gray-500">
                                           <span className="flex items-center gap-1">
                                             <Globe className="w-3 h-3" />
-                                            {source.domain ||
-                                              new URL(source.link).hostname}
+                                            {domain}
                                           </span>
                                           {source.publishedDate && (
                                             <span className="flex items-center gap-1">
@@ -571,9 +630,9 @@ export default function SearchPage() {
                                           )}
                                         </div>
                                       </div>
-                                    </div>
-                                  </motion.a>
-                                ))}
+                                    </motion.a>
+                                  );
+                                })}
                               </div>
                             </motion.div>
                           )}
