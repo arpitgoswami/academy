@@ -9,11 +9,8 @@ import {
   Loader,
   ExternalLink,
   Plus,
-  X,
   Sparkles,
-  Globe,
   Calendar,
-  Link2,
   ArrowRight,
 } from "lucide-react";
 
@@ -29,79 +26,211 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-// Skeleton Components
-const ImageSkeleton = ({ index }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ delay: index * 0.1 }}
-    className="w-64 aspect-square rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-gray-100 to-gray-200"
-  >
-    <motion.div
-      className="w-full h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-50"
-      animate={{ x: ["-100%", "100%"] }}
-      transition={{
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-  </motion.div>
-);
+// Enhanced markdown-like text formatter
+function formatAIResponse(text) {
+  if (!text) return [];
 
-const SourceSkeleton = ({ index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    className="p-6 rounded-xl border border-gray-100 bg-white"
-  >
-    <div className="flex items-start gap-4">
-      <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse" />
-      <div className="flex-1 space-y-3">
-        <div className="h-5 bg-gray-200 rounded-lg w-3/4 animate-pulse" />
-        <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
-        <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-        <div className="flex gap-4">
-          <div className="h-3 bg-gray-200 rounded w-20 animate-pulse" />
-          <div className="h-3 bg-gray-200 rounded w-16 animate-pulse" />
+  // Split text into paragraphs and process each
+  const paragraphs = text.split("\n\n").filter((p) => p.trim());
+
+  return paragraphs.map((paragraph, index) => {
+    const trimmed = paragraph.trim();
+
+    // Check for different types of content
+    if (trimmed.startsWith("# ")) {
+      return {
+        type: "h1",
+        content: trimmed.substring(2),
+        key: `h1-${index}`,
+      };
+    } else if (trimmed.startsWith("## ")) {
+      return {
+        type: "h2",
+        content: trimmed.substring(3),
+        key: `h2-${index}`,
+      };
+    } else if (trimmed.startsWith("### ")) {
+      return {
+        type: "h3",
+        content: trimmed.substring(4),
+        key: `h3-${index}`,
+      };
+    } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      // Handle bullet lists
+      const items = trimmed
+        .split("\n")
+        .filter((item) => item.trim().match(/^[-*]\s/));
+      return {
+        type: "ul",
+        items: items.map((item) => item.replace(/^[-*]\s/, "")),
+        key: `ul-${index}`,
+      };
+    } else if (/^\d+\.\s/.test(trimmed)) {
+      // Handle numbered lists
+      const items = trimmed
+        .split("\n")
+        .filter((item) => item.trim().match(/^\d+\.\s/));
+      return {
+        type: "ol",
+        items: items.map((item) => item.replace(/^\d+\.\s/, "")),
+        key: `ol-${index}`,
+      };
+    } else if (trimmed.startsWith("> ")) {
+      return {
+        type: "blockquote",
+        content: trimmed.substring(2),
+        key: `quote-${index}`,
+      };
+    } else if (trimmed.startsWith("```")) {
+      const lines = trimmed.split("\n");
+      const language = lines[0].substring(3);
+      const code = lines.slice(1, -1).join("\n");
+      return {
+        type: "code",
+        language,
+        content: code,
+        key: `code-${index}`,
+      };
+    } else {
+      // Regular paragraph - process inline formatting
+      const processedContent = processInlineFormatting(trimmed);
+      return {
+        type: "p",
+        content: processedContent,
+        key: `p-${index}`,
+      };
+    }
+  });
+}
+
+// Process inline formatting (bold, italic, code, links)
+function processInlineFormatting(text) {
+  // Convert **bold** to <strong>
+  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+  // Convert *italic* to <em>
+  text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>");
+
+  // Convert `code` to <code>
+  text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+  // Convert [text](url) to links
+  text = text.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>'
+  );
+
+  return text;
+}
+
+// Component to render formatted content
+function FormattedContent({ content }) {
+  switch (content.type) {
+    case "h1":
+      return (
+        <h1
+          key={content.key}
+          className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-gray-200 pb-2"
+        >
+          {content.content}
+        </h1>
+      );
+    case "h2":
+      return (
+        <h2
+          key={content.key}
+          className="text-2xl font-semibold text-gray-800 mb-4 mt-6"
+        >
+          {content.content}
+        </h2>
+      );
+    case "h3":
+      return (
+        <h3
+          key={content.key}
+          className="text-xl font-medium text-gray-800 mb-3 mt-5"
+        >
+          {content.content}
+        </h3>
+      );
+    case "ul":
+      return (
+        <ul
+          key={content.key}
+          className="list-disc list-inside space-y-2 mb-4 ml-4"
+        >
+          {content.items.map((item, i) => (
+            <li key={i} className="text-gray-700 leading-relaxed">
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: processInlineFormatting(item),
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+      );
+    case "ol":
+      return (
+        <ol
+          key={content.key}
+          className="list-decimal list-inside space-y-2 mb-4 ml-4"
+        >
+          {content.items.map((item, i) => (
+            <li key={i} className="text-gray-700 leading-relaxed">
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: processInlineFormatting(item),
+                }}
+              />
+            </li>
+          ))}
+        </ol>
+      );
+    case "blockquote":
+      return (
+        <blockquote
+          key={content.key}
+          className="border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-blue-50 rounded-r-lg"
+        >
+          <p
+            className="text-gray-700 italic"
+            dangerouslySetInnerHTML={{
+              __html: processInlineFormatting(content.content),
+            }}
+          />
+        </blockquote>
+      );
+    case "code":
+      return (
+        <div key={content.key} className="mb-4">
+          <div className="bg-gray-900 text-gray-100 rounded-lg overflow-hidden">
+            <div className="bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300">
+              {content.language || "code"}
+            </div>
+            <pre className="p-4 overflow-x-auto">
+              <code>{content.content}</code>
+            </pre>
+          </div>
         </div>
-      </div>
-    </div>
-  </motion.div>
-);
-
-const AnswerSkeleton = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="p-8 bg-white rounded-3xl shadow-xl border border-gray-100"
-  >
-    <div className="flex items-center gap-3 mb-6">
-      <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-xl animate-pulse" />
-      <div className="h-6 bg-gray-200 rounded-lg w-32 animate-pulse" />
-    </div>
-    <div className="space-y-4">
-      {[100, 85, 95, 70].map((width, i) => (
-        <motion.div
-          key={i}
-          className="h-4 bg-gray-200 rounded-full animate-pulse"
-          style={{ width: `${width}%` }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: i * 0.1 }}
+      );
+    case "p":
+    default:
+      return (
+        <p
+          key={content.key}
+          className="mb-4 text-gray-700 leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: content.content }}
         />
-      ))}
-    </div>
-  </motion.div>
-);
+      );
+  }
+}
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(false);
-  const [showSkeletons, setShowSkeletons] = useState(false);
   const [error, setError] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [streamedAnswer, setStreamedAnswer] = useState("");
@@ -137,13 +266,13 @@ export default function SearchPage() {
     setSources([]);
     setIsLoading(true);
     setShowLoadingScreen(true);
-    setShowSkeletons(false);
+    setIsStreaming(false);
 
     try {
       // Create abort controller for fetch request
       abortControllerRef.current = new AbortController();
 
-      // Fetch images
+      // Fetch images first
       const imagesResponse = await fetch(
         `/api/images?query=${encodeURIComponent(query)}`,
         {
@@ -160,12 +289,7 @@ export default function SearchPage() {
         setImages(imagesData.results.slice(0, 8));
       }
 
-      // Wait for loading screen
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setShowLoadingScreen(false);
-      setShowSkeletons(true);
-
-      // Start streaming search results
+      // Start streaming search results immediately after images are loaded
       setIsStreaming(true);
       eventSourceRef.current = new EventSource(
         `/api/search?q=${encodeURIComponent(query)}`
@@ -180,11 +304,12 @@ export default function SearchPage() {
               setSources(data.data || []);
               break;
             case "chunk":
+              // Hide loading screen when first chunk arrives
+              setShowLoadingScreen(false);
               setStreamedAnswer((prev) => prev + (data.data || ""));
               break;
             case "done":
               setIsStreaming(false);
-              setShowSkeletons(false);
               cleanup();
               break;
             case "error":
@@ -194,7 +319,7 @@ export default function SearchPage() {
           console.error("Error parsing SSE data:", e);
           setError("Error processing response");
           setIsStreaming(false);
-          setShowSkeletons(false);
+          setShowLoadingScreen(false);
           cleanup();
         }
       };
@@ -203,7 +328,7 @@ export default function SearchPage() {
         console.error("SSE connection error:", event);
         setError("Connection error. Please try again.");
         setIsStreaming(false);
-        setShowSkeletons(false);
+        setShowLoadingScreen(false);
         cleanup();
       };
     } catch (err) {
@@ -211,7 +336,7 @@ export default function SearchPage() {
         console.error("Search error:", err);
         setError("Failed to get response. Please try again.");
       }
-      setShowSkeletons(false);
+      setShowLoadingScreen(false);
     } finally {
       setIsLoading(false);
     }
@@ -227,7 +352,6 @@ export default function SearchPage() {
     setError("");
     setStreamedAnswer("");
     setSources([]);
-    setShowSkeletons(false);
     setIsStreaming(false);
   };
 
@@ -247,6 +371,7 @@ export default function SearchPage() {
   }, []);
 
   const hasResults = streamedAnswer || images.length > 0 || sources.length > 0;
+  const formattedContent = formatAIResponse(streamedAnswer);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -258,6 +383,19 @@ export default function SearchPage() {
           <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_49%,rgba(59,130,246,0.05)_50%,transparent_51%)] bg-[length:20px_20px]" />
         </div>
       </div>
+
+      {/* Custom CSS for inline code styling */}
+      <style jsx global>{`
+        .inline-code {
+          background-color: #f3f4f6;
+          color: #374151;
+          padding: 0.125rem 0.25rem;
+          border-radius: 0.25rem;
+          font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
+            "Liberation Mono", Menlo, monospace;
+          font-size: 0.875em;
+        }
+      `}</style>
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
@@ -427,34 +565,6 @@ export default function SearchPage() {
                   {showLoadingScreen && <LoadingScreen />}
                 </AnimatePresence>
 
-                {/* Skeletons */}
-                {showSkeletons && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-8"
-                  >
-                    {/* Image Skeletons */}
-                    <div className="overflow-x-auto pb-4">
-                      <div className="flex space-x-6 min-w-max">
-                        {[0, 1, 2, 3].map((i) => (
-                          <ImageSkeleton key={i} index={i} />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Answer Skeleton */}
-                    <AnswerSkeleton />
-
-                    {/* Sources Skeleton */}
-                    <div className="space-y-4">
-                      {[0, 1, 2].map((i) => (
-                        <SourceSkeleton key={i} index={i} />
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
                 {/* Actual Results */}
                 <AnimatePresence>
                   {!showLoadingScreen && hasResults && (
@@ -507,7 +617,7 @@ export default function SearchPage() {
                         </motion.div>
                       )}
 
-                      {/* Answer */}
+                      {/* Enhanced Answer with Formatting */}
                       {streamedAnswer && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
@@ -530,13 +640,11 @@ export default function SearchPage() {
                             )}
                           </div>
                           <div className="prose prose-lg max-w-none">
-                            {streamedAnswer.split("\n").map((line, i) => (
-                              <p
-                                key={i}
-                                className="mb-4 text-gray-700 leading-relaxed"
-                              >
-                                {line}
-                              </p>
+                            {formattedContent.map((content) => (
+                              <FormattedContent
+                                key={content.key}
+                                content={content}
+                              />
                             ))}
                           </div>
                         </motion.div>
@@ -551,7 +659,7 @@ export default function SearchPage() {
                         >
                           <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
-                              <Globe className="w-5 h-5 text-white" />
+                              <Search className="w-5 h-5 text-white" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-800">
                               Sources
@@ -602,7 +710,6 @@ export default function SearchPage() {
 
                                     <div className="flex items-center gap-4 text-sm text-gray-500">
                                       <span className="flex items-center gap-1">
-                                        <Globe className="w-4 h-4" />
                                         {domain}
                                       </span>
                                       {source.publishedDate && (
@@ -625,17 +732,6 @@ export default function SearchPage() {
                   )}
                 </AnimatePresence>
               </div>
-
-              {/* Close Button */}
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                onClick={handleCloseSearch}
-                className="fixed top-6 right-6 w-12 h-12 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border border-gray-200"
-              >
-                <X className="w-6 h-6 text-gray-600 group-hover:text-red-500 transition-colors" />
-              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
