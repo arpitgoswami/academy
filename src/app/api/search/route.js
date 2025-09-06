@@ -147,27 +147,71 @@ export async function GET(req) {
       geminiData.candidates?.[0]?.content?.parts?.[0]?.text ||
       "Gemini could not generate an answer.";
 
-    return NextResponse.json(
-      {
-        question: query,
-        answer,
-        sources: validScrapes.map((s) => ({ link: s.link, title: s.title })),
+    // Create a new ReadableStream for SSE
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Helper function to send SSE message
+        const sendMessage = (type, data) => {
+          controller.enqueue(`data: ${JSON.stringify({ type, data })}\n\n`);
+        };
+
+        try {
+          // Send sources first
+          sendMessage(
+            "sources",
+            validScrapes.map((s) => ({ link: s.link, title: s.title }))
+          );
+
+          // Split answer into chunks and stream each chunk
+          const chunkSize = 100;
+          const chunks =
+            answer.match(new RegExp(`.{1,${chunkSize}}`, "g")) || [];
+
+          for (const chunk of chunks) {
+            sendMessage("chunk", chunk);
+            // Add a small delay between chunks
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+
+          // Send completion message
+          sendMessage("done", { question: query });
+          controller.close();
+        } catch (error) {
+          sendMessage("error", { message: error.message });
+          controller.close();
+        }
       },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   } catch (err) {
-    return NextResponse.json(
-      { error: err.message || "Unexpected error occurred." },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    // Create an error stream
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          `data: ${JSON.stringify({
+            type: "error",
+            data: { message: err.message || "Unexpected error occurred." },
+          })}\n\n`
+        );
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
 }
