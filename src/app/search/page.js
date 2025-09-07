@@ -406,95 +406,89 @@ export default function SearchPage() {
               key="landing"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5 }}
-              className="flex-1 flex flex-col items-center justify-center p-6"
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 flex flex-col items-center justify-center p-4"
             >
-              {/* Logo Section */}
+              {/* Minimal Logo Section */}
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
-                className="text-center mb-12"
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="text-center mb-8"
               >
-                <motion.div
-                  animate={{
-                    rotate: [0, 2, -2, 0],
-                    scale: [1, 1.02, 1],
-                  }}
-                  transition={{
-                    duration: 6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="relative mb-8"
-                >
-                  <div className="w-56 h-56 mx-auto flex items-center justify-center relative">
-                    <Image
-                      src="/logo.svg"
-                      alt="Easy Notes Logo"
-                      width={224}
-                      height={224}
-                      priority
-                      className="w-full h-auto drop-shadow-lg"
-                    />
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.5, 0.3],
-                      }}
-                      transition={{ duration: 4, repeat: Infinity }}
-                    />
-                  </div>
+                <motion.div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+                  <Image
+                    src="/logo.svg"
+                    alt="Easy Notes Logo"
+                    width={224}
+                    height={224}
+                    priority
+                    className="w-full h-auto"
+                  />
                 </motion.div>
 
                 <motion.h1
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                  className="text-7xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="text-3xl font-semibold text-gray-900 mb-2"
                 >
                   Easy Notes
                 </motion.h1>
                 <motion.p
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  className="text-2xl text-gray-600 font-light"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="text-sm text-gray-500"
                 >
                   Ask anything, discover everything
                 </motion.p>
               </motion.div>
 
-              {/* Search Button */}
+              {/* Blue Gradient Button */}
               <motion.button
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 15,
-                  delay: 0.7,
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 20px 40px -10px rgba(59, 130, 246, 0.3)",
                 }}
-                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleOpenSearch}
-                className="group relative w-full max-w-lg h-18 bg-white/80 backdrop-blur-sm rounded-3xl flex items-center justify-between px-8 py-6 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/50"
+                className="relative w-full max-w-md h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-2xl flex items-center justify-center px-6 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden"
               >
-                <span className="text-gray-500 text-lg">
-                  Start your search...
-                </span>
                 <motion.div
-                  className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white"
-                  whileHover={{ rotate: 90 }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"
+                  initial={false}
+                />
+                <motion.span
+                  className="relative text-white font-medium text-sm"
+                  animate={{
+                    x: [0, 2, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 >
-                  <Plus className="w-5 h-5" />
-                </motion.div>
+                  Start Searching
+                </motion.span>
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-3xl opacity-0 group-hover:opacity-100"
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 rounded-2xl"
+                  animate={{
+                    background: [
+                      "linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)",
+                      "linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)",
+                    ],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
                 />
               </motion.button>
             </motion.div>
@@ -515,31 +509,28 @@ export default function SearchPage() {
                 transition={{ delay: 0.2 }}
                 className="mb-8"
               >
-                <form onSubmit={handleSearch} className="flex gap-4">
+                <form
+                  onSubmit={handleSearch}
+                  className="flex w-full max-w-xl mx-auto bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200/25 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
+                >
                   <div className="relative flex-1">
                     <input
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder="Ask me anything..."
-                      className="w-full p-6 rounded-3xl border border-gray-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg bg-white/80 backdrop-blur-sm text-gray-900 placeholder-gray-500 text-lg"
+                      required
+                      className="w-full p-4 pl-6 text-base placeholder-gray-400 text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200"
                       autoFocus
                     />
-                    <Search className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
                   </div>
                   <button
                     type="submit"
                     disabled={isLoading || !query.trim()}
-                    className="px-8 py-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-3xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="w-14 flex justify-center items-center bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
+                    aria-label="Search"
                   >
-                    {isLoading ? (
-                      <Loader className="w-6 h-6 animate-spin" />
-                    ) : (
-                      <>
-                        Search
-                        <ArrowRight className="w-5 h-5" />
-                      </>
-                    )}
+                    <Search className="w-5 h-5 text-white" />
                   </button>
                 </form>
               </motion.div>
@@ -576,7 +567,7 @@ export default function SearchPage() {
                       {/* Images */}
                       {images.length > 0 && (
                         <motion.div className="overflow-x-auto pb-4">
-                          <div className="flex space-x-6 min-w-max">
+                          <div className="flex space-x-4 min-w-max">
                             {images.map((image, idx) => (
                               <motion.div
                                 key={image.id}
@@ -585,31 +576,17 @@ export default function SearchPage() {
                                 transition={{ delay: idx * 0.1 }}
                                 className="relative group"
                               >
-                                <div className="w-64 aspect-square rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-                                  <img
-                                    src={image.urls.regular}
-                                    alt={
-                                      image.alt_description || "Search result"
-                                    }
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                </div>
-                                <a
-                                  href={image.source.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-2"
-                                >
-                                  <img
-                                    src={image.source.favicon}
-                                    alt={image.source.name}
-                                    className="w-5 h-5 rounded"
-                                  />
-                                  <span className="text-sm font-medium truncate">
-                                    {image.source.name}
-                                  </span>
-                                  <ExternalLink className="w-4 h-4 ml-auto flex-shrink-0" />
+                                <a href={image.source.url} target="_blank">
+                                  <div className="w-40 aspect-[3/4] rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group relative">
+                                    <img
+                                      src={image.urls.regular}
+                                      alt={
+                                        image.alt_description || "Search result"
+                                      }
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                  </div>
                                 </a>
                               </motion.div>
                             ))}
@@ -622,29 +599,30 @@ export default function SearchPage() {
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-8 bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100"
+                          transition={{ duration: 0.3 }}
                         >
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center">
-                              <Sparkles className="w-5 h-5 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-800">
-                              Answer
-                            </h3>
-                            {isStreaming && (
-                              <motion.div
-                                animate={{ opacity: [1, 0.3, 1] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="w-2 h-2 bg-blue-500 rounded-full ml-2"
-                              />
-                            )}
-                          </div>
                           <div className="prose prose-lg max-w-none">
-                            {formattedContent.map((content) => (
-                              <FormattedContent
-                                key={content.key}
-                                content={content}
-                              />
+                            {formattedContent.map((content, index) => (
+                              <div key={content.key}>
+                                {index === 0 && (
+                                  <h1 className="text-3xl font-bold text-blue-600 mb-4">
+                                    {content.text?.split(".")[0]}
+                                  </h1>
+                                )}
+                                <FormattedContent
+                                  content={{
+                                    ...content,
+                                    text:
+                                      index === 0
+                                        ? content.text
+                                            ?.split(".")
+                                            .slice(1)
+                                            .join(".")
+                                            .replace(/\./g, ".\n")
+                                        : content.text?.replace(/\./g, ".\n"),
+                                  }}
+                                />
+                              </div>
                             ))}
                           </div>
                         </motion.div>
@@ -658,18 +636,10 @@ export default function SearchPage() {
                           className="space-y-4"
                         >
                           <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
-                              <Search className="w-5 h-5 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-800">
-                              Sources
-                            </h3>
-                            <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
-                              {sources.length} results
-                            </span>
+                            <p className="text-gray-800">Sources</p>
                           </div>
 
-                          <div className="grid gap-4">
+                          <div className="grid gap-8">
                             {sources.map((source, i) => {
                               const domain =
                                 source.domain || new URL(source.link).hostname;
@@ -684,31 +654,24 @@ export default function SearchPage() {
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: i * 0.1 }}
-                                  className="group p-6 bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 flex items-start gap-4"
+                                  className="group transition-all duration-300 flex items-start gap-4"
                                 >
-                                  <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-md bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                  <div className="w-8 h-8 rounded-md overflow-hidden shadow-md bg-gray-50 flex items-center justify-center flex-shrink-0">
                                     <img
                                       src={favicon}
                                       alt={domain}
-                                      className="w-8 h-8 object-contain"
+                                      className="w-4 h-4 object-contain"
                                     />
                                   </div>
 
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                      <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="font-semibold text-sm text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
                                         {source.title || "Untitled Source"}
                                       </h4>
-                                      <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" />
                                     </div>
 
-                                    {source.description && (
-                                      <p className="text-gray-600 mb-3 line-clamp-2">
-                                        {source.description}
-                                      </p>
-                                    )}
-
-                                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    <div className="flex items-center gap-4 text-xs text-gray-500">
                                       <span className="flex items-center gap-1">
                                         {domain}
                                       </span>
