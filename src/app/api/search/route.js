@@ -157,18 +157,36 @@ ${initialContext}
 ### Instructions:
 - Write a clear, structured answer
 - Be objective and factual
-- No markdown language no things like that
+- No markdown language, no things like that
 - If you can't find the answer in the context, use your own knowledge
 - Use simple text with emoji bullet points
-- The format should start with a main heading, followed by subheadings. Under each subheading, include 2–3 bullet points. Each bullet should begin with an emoji, then bold text, followed by a colon and the description.
-- Include a heading at the top
+- The format should start with a main heading on the first line, followed by subheadings. Under each subheading, include 2–3 bullet points. Each bullet should begin with an emoji, then bold text, followed by a colon and the description.
+- Include a heading at the top as the very first line
 - Keep points concise (1-2 lines each)
 - No URLs in the response
 - No hallucination
-- Also provide line breaks between headings and sections for clarity
+- Use actual line breaks between sections for proper formatting
+- Each section should be separated by a blank line
 
-### Response Format:
-Start with a heading, then provide key points with relevant emojis.
+### Response Format Requirements:
+1. Start with a main heading as the very first line
+2. Add a blank line after the heading
+3. Add subheadings followed by bullet points
+4. Separate each section with blank lines
+5. Use emojis at the start of each bullet point
+
+Example format:
+# Main Topic Heading
+
+## Subheading 1
+
+🔹 **Key Point**: Description here
+🔹 **Another Point**: Description here
+
+## Subheading 2
+
+🔸 **Important Info**: Details here
+🔸 **Additional Detail**: More information
         `.trim();
 
         // Start Gemini request
@@ -198,8 +216,25 @@ Start with a heading, then provide key points with relevant emojis.
         if (geminiResponse.status === "fulfilled") {
           try {
             const geminiData = await geminiResponse.value.json();
-            answer =
-              geminiData.candidates?.[0]?.content?.parts?.[0]?.text || answer;
+            const rawAnswer =
+              geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (rawAnswer) {
+              // Ensure proper formatting with line breaks
+              answer = rawAnswer
+                .replace(/\\n/g, "\n") // Convert \n strings to actual line breaks
+                .replace(/\n{3,}/g, "\n\n") // Limit consecutive line breaks to 2
+                .trim();
+
+              // Ensure the first line is a heading if it's not already
+              if (!answer.startsWith("#") && !answer.includes("\n#")) {
+                const lines = answer.split("\n");
+                if (lines.length > 0) {
+                  lines[0] = `# ${lines[0].replace(/^#+\s*/, "")}`;
+                  answer = lines.join("\n");
+                }
+              }
+            }
           } catch (e) {
             console.error("Gemini parsing error:", e);
           }
@@ -256,10 +291,26 @@ Start with a heading, then provide key points with relevant emojis.
                 );
 
                 const enhancedData = await enhancedResponse.json();
-                const enhancedAnswer =
+                const enhancedRawAnswer =
                   enhancedData.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (enhancedAnswer && enhancedAnswer.length > answer.length) {
-                  answer = enhancedAnswer;
+
+                if (
+                  enhancedRawAnswer &&
+                  enhancedRawAnswer.length > answer.length
+                ) {
+                  // Apply same formatting to enhanced answer
+                  answer = enhancedRawAnswer
+                    .replace(/\\n/g, "\n")
+                    .replace(/\n{3,}/g, "\n\n")
+                    .trim();
+
+                  if (!answer.startsWith("#") && !answer.includes("\n#")) {
+                    const lines = answer.split("\n");
+                    if (lines.length > 0) {
+                      lines[0] = `# ${lines[0].replace(/^#+\s*/, "")}`;
+                      answer = lines.join("\n");
+                    }
+                  }
                 }
               } catch (e) {
                 console.error("Enhanced response error:", e);
@@ -268,12 +319,20 @@ Start with a heading, then provide key points with relevant emojis.
           }
         }
 
-        // Step 4: Stream the answer in smaller, faster chunks
-        const chunkSize = 50; // Smaller chunks for smoother streaming
-        const chunks = answer.match(new RegExp(`.{1,${chunkSize}}`, "g")) || [];
+        // Step 4: Stream the answer preserving line breaks
+        const lines = answer.split("\n");
 
-        for (const chunk of chunks) {
-          sendMessage("chunk", chunk);
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.trim()) {
+            sendMessage("chunk", line);
+          }
+
+          // Send line break as separate chunk to preserve formatting
+          if (i < lines.length - 1) {
+            sendMessage("chunk", "\n");
+          }
+
           // Smaller delay for faster streaming
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
