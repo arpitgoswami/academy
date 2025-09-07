@@ -417,7 +417,7 @@ export default function SearchPage() {
                 transition={{ duration: 0.4 }}
                 className="text-center mb-8"
               >
-                <motion.div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+                <motion.div className="w-32 h-32 mx-auto flex items-center justify-center">
                   <Image
                     src="/logo.svg"
                     alt="Easy Notes Logo"
