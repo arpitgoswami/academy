@@ -4,8 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Activity, Clock, X } from "lucide-react";
 
+interface Stats {
+  total: number;
+  pressesToday: number;
+  lastPress: string | null;
+  perDay?: Record<string, number>;
+}
+
 export default function StatsPage() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,11 +31,11 @@ export default function StatsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-rose-50 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-white to-rose-50 p-8">
       <div className="w-full max-w-lg bg-white/95 rounded-3xl p-8 shadow-2xl border border-white/50">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-rose-500 to-orange-500 rounded-xl">
+            <div className="p-2 bg-linear-to-br from-rose-500 to-orange-500 rounded-xl">
               <Activity className="w-5 h-5 text-white" />
             </div>
             <h2 className="text-xl font-bold text-slate-800">SOS Statistics</h2>
@@ -36,16 +43,10 @@ export default function StatsPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/"
-              className="text-sm text-slate-500 hover:text-slate-700"
-            >
-              Back
-            </Link>
-            <button
-              onClick={() => window.location.reload()}
               className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
             >
               <X className="w-5 h-5 text-slate-400" />
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -53,21 +54,21 @@ export default function StatsPage() {
 
         {!loading && stats && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-rose-50 to-orange-50 rounded-2xl">
+            <div className="flex items-center justify-between p-4 bg-linear-to-r from-rose-50 to-orange-50 rounded-2xl">
               <span className="text-slate-600">Total Alerts</span>
               <span className="text-2xl font-bold text-rose-600">
                 {stats.total}
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl">
+            <div className="flex items-center justify-between p-4 bg-linear-to-r from-blue-50 to-cyan-50 rounded-2xl">
               <span className="text-slate-600">Today</span>
               <span className="text-2xl font-bold text-blue-600">
                 {stats.pressesToday}
               </span>
             </div>
 
-            <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl">
+            <div className="p-4 bg-linear-to-r from-purple-50 to-pink-50 rounded-2xl">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-4 h-4 text-purple-500" />
                 <span className="text-slate-600">Last Alert</span>
@@ -93,7 +94,7 @@ export default function StatsPage() {
                       <span className="text-sm text-slate-600">{day}</span>
                       <div className="flex items-center gap-2">
                         <div
-                          className="h-2 bg-gradient-to-r from-rose-400 to-orange-400 rounded-full"
+                          className="h-2 bg-linear-to-r from-rose-400 to-orange-400 rounded-full"
                           style={{
                             width: `${Math.min(Number(count) * 20, 100)}px`,
                           }}
