@@ -16,13 +16,11 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
-  const [ripples, setRipples] = useState<
-    { id: number; x: number; y: number }[]
-  >([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView();
   };
 
   useEffect(() => {
@@ -38,36 +36,73 @@ export default function Home() {
 
   const sendMessage = async (message: string, isInitial = false) => {
     setIsLoading(true);
-    const newMessages = isInitial
-      ? []
-      : [
-          ...messages,
-          { role: "user" as const, content: message, timestamp: new Date() },
-        ];
-    setMessages(newMessages);
+
+    // 1. Prepare the message history to send to API
+    let newMessages: Message[] = [];
+
+    if (isInitial) {
+      // If it's the starting prompt, history is empty
+      newMessages = [];
+    } else {
+      // Otherwise, add the user's new message to history
+      const userMsg: Message = {
+        role: "user",
+        content: message,
+        timestamp: new Date(),
+      };
+      newMessages = [...messages, userMsg];
+      // Update UI immediately with user message
+      setMessages(newMessages);
+    }
 
     try {
+      // 2. Add a blank placeholder for the Assistant's incoming response
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "", timestamp: new Date() },
+      ]);
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
       });
-      const data = await response.json();
-      const aiMessage = data.choices[0].message.content;
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: aiMessage,
-          timestamp: new Date(),
-        },
-      ]);
+
+      if (!response.body) throw new Error("No response body");
+
+      // 3. Set up the stream reader
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let streamedContent = "";
+
+      // 4. Read the stream chunk by chunk
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          streamedContent += chunk;
+
+          // Update the last message (the placeholder) with the new text
+          setMessages((prev) => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              content: streamedContent,
+            };
+            return updated;
+          });
+        }
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant" as const,
+          role: "assistant",
           content: "Sorry, I encountered an error. Please try again.",
           timestamp: new Date(),
         },
@@ -84,28 +119,12 @@ export default function Home() {
     }
   };
 
-  const addRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const button = e.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    const newRipple = { id: Date.now(), x, y };
-    setRipples((prev) => [...prev, newRipple]);
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
-    }, 1000);
-  };
-
   const recordSOS = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    addRipple(e);
     setIsPressed(true);
-
     try {
       await fetch("/api/sos", { method: "POST" });
-      setTimeout(() => {
-        setIsPressed(false);
-        setView("chat");
-      }, 600);
+      setIsPressed(false);
+      setView("chat");
     } catch (err) {
       console.error("Failed to record SOS", err);
       setIsPressed(false);
@@ -117,7 +136,7 @@ export default function Home() {
       <SOSView
         isPressed={isPressed}
         setIsPressed={setIsPressed}
-        ripples={ripples}
+        ripples={[]}
         recordSOS={recordSOS}
       />
     );

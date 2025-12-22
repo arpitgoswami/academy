@@ -12,11 +12,13 @@ export async function POST(request) {
         },
         body: JSON.stringify({
           model: "xiaomi/mimo-v2-flash:free",
+          // 1. Enable streaming from the AI provider
+          stream: true,
           messages: [
             {
               role: "system",
               content:
-                "You are a helpful coach who will help me to resist me the masturbation urge and focus on my life goals. Always provide positive reinforcement and pratical advice to overcome urges. Keep responses concise and encouraging. Minimum limit of the response is 100 words. Use bullet points for better readability. Provide me with at least 2 practical tips to overcome the urge each time I message you. Never break character. Always remind me of my long-term goals and the benefits of staying strong. Your tone should be supportive, motivational, and empathetic. Never mention that you are an AI model or refer to yourself in any way. You can add quotes from the asian mythologies and philosophies to make your responses more impactful and engaging.",
+                "You are a helpful coach who will help me to become the best version of myself.",
             },
             ...messages,
           ],
@@ -28,10 +30,54 @@ export async function POST(request) {
       throw new Error("Failed to fetch from OpenRouter API");
     }
 
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    // 2. Create a new stream to transform the data
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Decode the chunk and add to buffer
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          // Split into lines
+          const lines = buffer.split("\n");
+          // Keep the last line in the buffer (it might be incomplete)
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            // OpenRouter sends lines starting with "data: "
+            if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+            const data = trimmed.slice(6); // Remove "data: "
+            if (data === "[DONE]") continue; // Ignore the end signal
+
+            try {
+              const json = JSON.parse(data);
+              const content = json.choices[0]?.delta?.content || "";
+              if (content) {
+                // Send just the text content to your client
+                controller.enqueue(encoder.encode(content));
+              }
+            } catch (e) {
+              // Ignore parse errors from partial lines
+            }
+          }
+        }
+        controller.close();
+      },
+    });
+
+    // Return the custom stream
+    return new Response(stream, {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
   } catch (error) {
     console.error("Error in chat API:", error);
