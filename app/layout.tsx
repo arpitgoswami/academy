@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-
-// Removed font imports and globals.css to disable Tailwind completely
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sentinel — Minimal Guardian",
-  description: "Minimal, bright emergency assistant",
+  title: "Sentinel — Emergency Guardian",
+  description: "Modern emergency assistant with AI-powered support",
   icons: {
     icon: "/favicon.svg",
   },
@@ -17,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
