@@ -15,6 +15,10 @@ export default function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Constants for progress bar visualization
+  const PROGRESS_BAR_MULTIPLIER = 20;
+  const PROGRESS_BAR_MAX_WIDTH = 200;
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -124,20 +128,29 @@ export default function StatsPage() {
                 <div className="space-y-3">
                   {Object.entries(stats.perDay)
                     .sort(([a], [b]) => b.localeCompare(a))
-                    .map(([day, count]) => (
-                      <div
-                        key={day}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
-                      >
-                        <span className="font-medium text-gray-700">{day}</span>
-                        <div className="flex items-center space-x-3">
-                          <div className="h-2 bg-gradient-to-r from-red-400 to-pink-500 rounded-full" style={{ width: `${Math.min(Number(count) * 20, 200)}px` }}></div>
-                          <span className="font-bold text-gray-900 min-w-[2rem] text-right">
-                            {String(count)}
-                          </span>
+                    .map(([day, count]) => {
+                      const progressWidth = Math.min(
+                        Number(count) * PROGRESS_BAR_MULTIPLIER,
+                        PROGRESS_BAR_MAX_WIDTH
+                      );
+                      return (
+                        <div
+                          key={day}
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
+                        >
+                          <span className="font-medium text-gray-700">{day}</span>
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="h-2 bg-gradient-to-r from-red-400 to-pink-500 rounded-full"
+                              style={{ width: `${progressWidth}px` }}
+                            ></div>
+                            <span className="font-bold text-gray-900 min-w-[2rem] text-right">
+                              {String(count)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </div>
             )}
