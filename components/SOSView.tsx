@@ -1,38 +1,33 @@
-"use client";
-
 import Link from "next/link";
-import { AlertCircle, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 
 interface SOSViewProps {
   isPressed: boolean;
   setIsPressed: (pressed: boolean) => void;
-  ripples: { id: number; x: number; y: number }[];
   recordSOS: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export default function SOSView({ isPressed, setIsPressed, recordSOS }: SOSViewProps) {
+export default function SOSView({
+  isPressed,
+  setIsPressed,
+  recordSOS,
+}: SOSViewProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-red-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse-delayed"></div>
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center justify-center space-y-8 max-w-2xl w-full">
+    <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white relative overflow-hidden">
+      {/* Main Content Container */}
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md space-y-16">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center space-x-3">
-            <AlertCircle className="w-12 h-12 text-red-500" />
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-              Sentinel
-            </h1>
-          </div>
-          <p className="text-gray-600 text-lg">Your AI-powered emergency guardian</p>
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl md:text-5xl font-thin tracking-[0.2em] uppercase text-black">
+            Sentinel
+          </h1>
+          <p className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">
+            AI-Powered Emergency Guardian
+          </p>
         </div>
 
         {/* Main SOS Button */}
-        <div className="relative">
+        <div className="relative group">
           <button
             onClick={recordSOS}
             onMouseDown={() => setIsPressed(true)}
@@ -40,46 +35,47 @@ export default function SOSView({ isPressed, setIsPressed, recordSOS }: SOSViewP
             onMouseLeave={() => setIsPressed(false)}
             className={`
               relative w-64 h-64 rounded-full 
-              bg-gradient-to-br from-red-500 to-pink-600
-              text-white font-bold text-4xl
-              shadow-2xl
-              transform transition-all duration-200
-              hover:scale-105 hover:shadow-3xl
+              border border-black bg-white
+              text-black font-thin text-5xl tracking-widest
+              transition-all duration-500 ease-out
+              hover:bg-black hover:text-white
               active:scale-95
-              focus:outline-none focus:ring-4 focus:ring-red-300
-              ${isPressed ? 'scale-95' : ''}
+              focus:outline-none
+              flex items-center justify-center
+              z-20
+              ${isPressed ? "scale-95 bg-black text-white" : ""}
             `}
           >
-            <span className="relative z-10">SOS</span>
-            
-            {/* Animated ring */}
-            <span className="absolute inset-0 rounded-full bg-red-500 opacity-50 animate-ping"></span>
-            
-            {/* Glow effect */}
-            <span className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400 to-pink-500 blur-xl opacity-50"></span>
+            <span className={isPressed ? "animate-pulse" : ""}>SOS</span>
           </button>
-          
-          <p className="text-center mt-6 text-gray-600 font-medium">
-            Press for emergency assistance
+
+          {/* Minimalist Ring Animation (Only visible on hover/active) */}
+          <div className="absolute inset-0 -m-4 border border-black/10 rounded-full scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+          <div className="absolute inset-0 -m-8 border border-black/5 rounded-full scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-1000 delay-75 pointer-events-none" />
+
+          <p className="absolute -bottom-12 left-0 right-0 text-center text-[10px] uppercase tracking-widest text-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            Click to activate
           </p>
         </div>
 
-        {/* Navigation */}
-        <Link 
+        {/* Navigation / Stats */}
+        <Link
           href="/stats"
           className="
-            flex items-center space-x-2
-            px-6 py-3 rounded-full
-            bg-white text-gray-700
-            border-2 border-gray-200
-            hover:border-red-300 hover:bg-red-50
-            transition-all duration-200
-            shadow-md hover:shadow-lg
-            font-medium
+            group flex items-center space-x-3
+            px-8 py-3 
+            border border-black/20 hover:border-black
+            bg-transparent hover:bg-black
+            transition-all duration-300
           "
         >
-          <BarChart3 className="w-5 h-5" />
-          <span>View Statistics</span>
+          <BarChart3
+            strokeWidth={1}
+            className="w-4 h-4 text-black group-hover:text-white transition-colors"
+          />
+          <span className="text-xs uppercase tracking-widest text-black group-hover:text-white transition-colors">
+            View Statistics
+          </span>
         </Link>
       </div>
     </div>

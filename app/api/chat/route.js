@@ -18,7 +18,7 @@ export async function POST(request) {
             {
               role: "system",
               content:
-                "You are a helpful coach who will help me to become the best version of myself.",
+                "Act as a mindset coach helping me resist the urge to masturbate. Provide immediate motivation and actionable steps to shift my focus. Keep responses under 200 words, using short, punchy paragraphs.",
             },
             ...messages,
           ],
